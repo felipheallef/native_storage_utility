@@ -8,8 +8,13 @@ environment:
 
 # Add regular dependencies here.
 dependencies:
+  ffi: ^2.2.0
+  objective_c: ^9.4.1
+  plugin_platform_interface: ^2.1.8
   # path: ^1.9.0
 
 dev_dependencies:
+  args: ^2.7.0
+  ffigen: ^20.1.1
   lints: ^6.0.0
   test: ^1.25.6
