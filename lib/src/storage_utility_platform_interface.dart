@@ -1,5 +1,9 @@
-import 'package:native_storage_utility/src/storage_utility_foundation.dart';
+import 'dart:io';
+
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
+
+import 'storage_utility_foundation.dart';
+import 'storage_utility_windows.dart';
 
 // import 'src/method_channel_storage_utility.dart';
 
@@ -17,7 +21,13 @@ abstract class StorageUtilityPlatform extends PlatformInterface {
 
   static final Object _token = Object();
 
-  static StorageUtilityPlatform _instance = StorageUtilityFoundation();
+  static StorageUtilityPlatform _instance = switch (Platform.operatingSystem) {
+    'ios' || 'macos' => StorageUtilityFoundation(),
+    'windows' => StorageUtilityWindows(),
+    _ => throw UnsupportedError(
+      'Unsupported platform: ${Platform.operatingSystem}',
+    ),
+  };
 
   /// The default instance of [StorageUtilityPlatform] to use.
   ///
