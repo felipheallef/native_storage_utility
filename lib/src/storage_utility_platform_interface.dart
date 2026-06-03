@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'storage_utility_foundation.dart';
+import 'storage_utility_linux.dart';
 import 'storage_utility_windows.dart';
 
 // import 'src/method_channel_storage_utility.dart';
@@ -23,6 +24,7 @@ abstract class StorageUtilityPlatform extends PlatformInterface {
 
   static StorageUtilityPlatform _instance = switch (Platform.operatingSystem) {
     'ios' || 'macos' => StorageUtilityFoundation(),
+    'linux' || 'android' => StorageUtilityLinux(),
     'windows' => StorageUtilityWindows(),
     _ => throw UnsupportedError(
       'Unsupported platform: ${Platform.operatingSystem}',

@@ -54,7 +54,9 @@ final _darwinConfig = FfiGenerator(
 );
 
 final _linuxConfig = FfiGenerator(
-  headers: Headers(entryPoints: [.file('$macSdkPath/usr/include/_bounds.h')]),
+  headers: Headers(
+    entryPoints: [.file('/usr/include/x86_64-linux-gnu/sys/statvfs.h')],
+  ),
   functions: .includeSet({'statvfs', 'fstatvfs'}),
   structs: .includeSet({'statvfs'}),
   output: Output(dartFile: .file('lib/src/ffi/linux_bindings.dart')),

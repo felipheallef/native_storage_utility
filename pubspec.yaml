@@ -12,6 +12,7 @@ dependencies:
   objective_c: ^9.4.1
   plugin_platform_interface: ^2.1.8
   win32: ^5.15.0
+  xdg_desktop_portal: ^0.1.14
   # path: ^1.9.0
 
 dev_dependencies:

@@ -9,78 +9,62 @@ import 'storage_utility_platform_interface.dart';
 /// The Windows implementation of [StorageUtilityPlatform].
 class StorageUtilityWindows extends StorageUtilityPlatform {
   @override
-  int getFreeBytes(String path) {
-    final pathNamePtr = path.toNativeUtf16();
-    final lpFreeBytesAvailableToCaller = calloc<ULONGLONG>();
-    final lpTotalNumberOfFreeBytes = calloc<ULONGLONG>();
+  int getFreeBytes(String path) => using((arena) {
+    final pathNamePtr = path.toNativeUtf16(allocator: arena);
+    final lpFreeBytesAvailableToCaller = arena<ULONGLONG>();
+    final lpTotalNumberOfFreeBytes = arena<ULONGLONG>();
 
-    try {
-      final int hr = GetDiskFreeSpaceEx(
-        pathNamePtr,
-        lpFreeBytesAvailableToCaller,
-        nullptr,
-        lpTotalNumberOfFreeBytes,
-      );
+    final result = GetDiskFreeSpaceEx(
+      pathNamePtr,
+      lpFreeBytesAvailableToCaller,
+      nullptr,
+      lpTotalNumberOfFreeBytes,
+    );
 
-      if (FAILED(hr)) {
-        throw Exception('Unable to get free bytes of storage space');
-      }
-
-      return min(
-        lpFreeBytesAvailableToCaller.value,
-        lpTotalNumberOfFreeBytes.value,
-      );
-    } finally {
-      free(pathNamePtr);
-      free(lpFreeBytesAvailableToCaller);
-      free(lpTotalNumberOfFreeBytes);
+    if (result == FALSE) {
+      throw Exception('Unable to get free bytes of storage space');
     }
-  }
+
+    return min(
+      lpFreeBytesAvailableToCaller.value,
+      lpTotalNumberOfFreeBytes.value,
+    );
+  });
 
   @override
-  int getTotalBytes(String path) {
-    final pathNamePtr = path.toNativeUtf16();
-    final lpTotalNumberOfBytes = calloc<ULONGLONG>();
+  int getTotalBytes(String path) => using((arena) {
+    final pathNamePtr = path.toNativeUtf16(allocator: arena);
+    final lpTotalNumberOfBytes = arena<ULONGLONG>();
 
-    try {
-      final int hr = GetDiskFreeSpaceEx(
-        pathNamePtr,
-        nullptr,
-        lpTotalNumberOfBytes,
-        nullptr,
-      );
+    final result = GetDiskFreeSpaceEx(
+      pathNamePtr,
+      nullptr,
+      lpTotalNumberOfBytes,
+      nullptr,
+    );
 
-      if (FAILED(hr)) {
-        throw Exception('Unable to get total bytes of storage space');
-      }
-
-      return lpTotalNumberOfBytes.value;
-    } finally {
-      free(pathNamePtr);
-      free(lpTotalNumberOfBytes);
+    if (result == FALSE) {
+      throw Exception('Unable to get total bytes of storage space');
     }
-  }
+
+    return lpTotalNumberOfBytes.value;
+  });
 
   @override
-  Future<bool?> openDirectory(String path) async {
-    final pathNamePtr = path.toNativeUtf16();
-    final operationPtr = 'open'.toNativeUtf16();
+  Future<bool?> openDirectory(String path) async => using((arena) {
+    final pathNamePtr = path.toNativeUtf16(allocator: arena);
+    final operationPtr = 'open'.toNativeUtf16(allocator: arena);
 
-    try {
-      final hwnd = GetForegroundWindow();
-      ShellExecute(
-        hwnd,
-        operationPtr,
-        pathNamePtr,
-        nullptr,
-        nullptr,
-        SW_SHOWNORMAL,
-      );
-    } finally {
-      free(pathNamePtr);
-      free(operationPtr);
-    }
+    final hwnd = GetForegroundWindow();
+    ShellExecute(
+      hwnd,
+      operationPtr,
+      pathNamePtr,
+      nullptr,
+      nullptr,
+      SW_SHOWNORMAL,
+    );
 
     return true;
-  }
+  });
 }
