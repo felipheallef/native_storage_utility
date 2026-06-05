@@ -1,48 +1,107 @@
-import 'dart:ffi';
+import 'package:jni/jni.dart';
+import 'package:jni_flutter/jni_flutter.dart';
 
-import 'package:ffi/ffi.dart';
-import 'package:xdg_desktop_portal/xdg_desktop_portal.dart';
-
-import 'ffi/linux_bindings.dart';
+import 'jni/android_bindings.dart' as j;
 import 'native_storage_utility_platform_interface.dart';
 
 /// The Android implementation of [NativeStorageUtilityPlatform].
 class NativeStorageUtilityAndroid extends NativeStorageUtilityPlatform {
-  @override
-  int getFreeBytes(String path) => using((arena) {
-    final pathPtr = path.toNativeUtf8(allocator: arena);
-    final bufferPtr = arena<statvfs>();
+  NativeStorageUtilityAndroid()
+    : _context = androidApplicationContext.as<j.Context>(j.Context.type);
 
-    final result = statvfs$1(pathPtr.cast(), bufferPtr);
-
-    if (result != 0) {
-      throw Exception('Unable to get free bytes of storage space');
-    }
-
-    return bufferPtr.ref.f_bavail * bufferPtr.ref.f_frsize;
-  });
+  late final j.Context _context;
 
   @override
-  int getTotalBytes(String path) => using((arena) {
-    final pathPtr = path.toNativeUtf8(allocator: arena);
-    final bufferPtr = arena<statvfs>();
-
-    final result = statvfs$1(pathPtr.cast(), bufferPtr);
-
-    if (result != 0) {
-      throw Exception('Unable to get free bytes of storage space');
-    }
-
-    return bufferPtr.ref.f_blocks * bufferPtr.ref.f_frsize;
-  });
+  int getFreeBytes(String path) {
+    final statFs = j.StatFs(path.toJString());
+    return statFs.availableBytes;
+  }
 
   @override
-  Future<void> openDirectory(String path) async {
-    final client = XdgDesktopPortalClient();
-    try {
-      await client.openUri.openUri(Uri.file(path).toString());
-    } finally {
-      await client.close();
+  int getTotalBytes(String path) {
+    final statFs = j.StatFs(path.toJString());
+    return statFs.totalBytes;
+  }
+
+  @override
+  Future<void> openFile(String path) async {
+    final mimeType = getMimeType(path);
+
+    // final uri = j.Uri.parse(Uri.file(path).toString().toJString());
+    final uri = j.FileProvider.getUriForFile(
+      _context,
+      '${_context.packageName}.fileprovider'.toJString(),
+      j.File.new$1(path.toJString()),
+    );
+
+    final intent = j.Intent.new$3(j.Intent.ACTION_VIEW);
+
+    intent.addCategory(j.Intent.CATEGORY_DEFAULT);
+    // Uri uri = FileUtil.getFileUri(context, filePath);
+    intent.setDataAndType(uri, mimeType);
+    intent.addFlags(
+      j.Intent.FLAG_ACTIVITY_NEW_TASK |
+          j.Intent.FLAG_GRANT_READ_URI_PERMISSION |
+          j.Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+    );
+
+    final resolveInfoList = <j.ResolveInfo>[];
+
+    if (j.Build$VERSION.SDK_INT >= j.Build$VERSION_CODES.TIRAMISU) {
+      final result =
+          _context.packageManager
+              ?.queryIntentActivities(
+                intent,
+                j.PackageManager$ResolveInfoFlags.of(
+                  j.PackageManager.MATCH_DEFAULT_ONLY,
+                ),
+              )
+              ?.asDart() ??
+          [];
+
+      resolveInfoList.addAll(result.nonNulls);
+    } else {
+      final result =
+          _context.packageManager
+              ?.queryIntentActivities$1(
+                intent,
+                j.PackageManager.MATCH_DEFAULT_ONLY,
+              )
+              ?.asDart() ??
+          [];
+
+      resolveInfoList.addAll(result.nonNulls);
     }
+
+    for (final resolveInfo in resolveInfoList) {
+      final packageName = resolveInfo.activityInfo!.packageName;
+      _context.grantUriPermission(
+        packageName,
+        uri,
+        j.Intent.FLAG_GRANT_READ_URI_PERMISSION |
+            j.Intent.FLAG_GRANT_WRITE_URI_PERMISSION,
+      );
+    }
+
+    _context.startActivity(intent);
+  }
+
+  bool hasPermission(String permission) {
+    final string = permission.toJString();
+    return _context.checkSelfPermission(string) ==
+        j.PackageManager.PERMISSION_GRANTED;
+  }
+
+  JString getMimeType(String path) {
+    final mimeTypeMap = j.MimeTypeMap.singleton!;
+    final mimeType = mimeTypeMap.getMimeTypeFromExtension(
+      path.split('.').last.toJString(),
+    );
+
+    if (mimeType == null) {
+      throw Exception('Unable to get mime type of file');
+    }
+
+    return mimeType;
   }
 }
