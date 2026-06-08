@@ -1,7 +1,7 @@
 name: native_storage_utility
-description: "A new Flutter plugin project."
+description: "WIP - Some storage utilities using FFI/JNI"
 version: 0.0.1
-homepage:
+homepage: https://github.com/felipheallef/native_storage_utility
 
 environment:
   sdk: ^3.12.0
