@@ -51,7 +51,7 @@ class NativeStorageUtilityWindows extends NativeStorageUtilityPlatform {
   });
 
   @override
-  Future<bool?> openDirectory(String path) async => using((arena) {
+  Future<bool?> openFile(String path) async => using((arena) {
     final pathNamePtr = path.toNativeUtf16(allocator: arena);
     final operationPtr = 'open'.toNativeUtf16(allocator: arena);
 
@@ -67,4 +67,7 @@ class NativeStorageUtilityWindows extends NativeStorageUtilityPlatform {
 
     return true;
   });
+
+  @override
+  Future<bool?> openDirectory(String path) => openFile(path);
 }
