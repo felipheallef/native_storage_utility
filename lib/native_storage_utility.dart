@@ -1,6 +1,6 @@
-import 'src/storage_utility_platform_interface.dart';
+import 'src/native_storage_utility_platform_interface.dart';
 
-StorageUtilityPlatform get _platform => StorageUtilityPlatform.instance;
+NativeStorageUtilityPlatform get _platform => .instance;
 
 /// Number of bytes available in storage.
 int getFreeBytes(String path) {
@@ -17,6 +17,10 @@ int getTotalBytes(String path) {
 /// The given parameter is the [path] to the directory on the respective platform
 ///
 /// This returns true if the path can be opened. Otherwise, it maybe null or false.
-Future<bool?> openDirectory(String path) async {
+void openDirectory(String path) {
   return _platform.openDirectory(path);
+}
+
+void openFile(String path) {
+  _platform.openFile(path);
 }

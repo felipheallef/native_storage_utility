@@ -2,8 +2,10 @@ import 'dart:io';
 
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'storage_utility_foundation.dart';
-import 'storage_utility_windows.dart';
+import 'android_storage_utility_android.dart';
+import 'native_storage_utility_foundation.dart';
+import 'native_storage_utility_linux.dart';
+import 'native_storage_utility_windows.dart';
 
 // import 'src/method_channel_storage_utility.dart';
 
@@ -14,30 +16,33 @@ import 'storage_utility_windows.dart';
 /// changes. Extending this class (using `extends`) ensures that the subclass
 /// will get the default implementation, while platform implementations that
 /// `implements` this interface will be broken by newly added
-/// [StorageUtilityPlatform] methods.
-abstract class StorageUtilityPlatform extends PlatformInterface {
-  /// Constructs a StorageUtilityPlatform.
-  StorageUtilityPlatform() : super(token: _token);
+/// [NativeStorageUtilityPlatform] methods.
+abstract class NativeStorageUtilityPlatform extends PlatformInterface {
+  /// Constructs a NativeNativeStorageUtilityPlatform.
+  NativeStorageUtilityPlatform() : super(token: _token);
 
   static final Object _token = Object();
 
-  static StorageUtilityPlatform _instance = switch (Platform.operatingSystem) {
-    'ios' || 'macos' => StorageUtilityFoundation(),
-    'windows' => StorageUtilityWindows(),
-    _ => throw UnsupportedError(
-      'Unsupported platform: ${Platform.operatingSystem}',
-    ),
-  };
+  static NativeStorageUtilityPlatform _instance =
+      switch (Platform.operatingSystem) {
+        'ios' || 'macos' => NativeStorageUtilityFoundation(),
+        'linux' => NativeStorageUtilityLinux(),
+        'android' => NativeStorageUtilityAndroid(),
+        'windows' => NativeStorageUtilityWindows(),
+        _ => throw UnsupportedError(
+          'Unsupported platform: ${Platform.operatingSystem}',
+        ),
+      };
 
-  /// The default instance of [StorageUtilityPlatform] to use.
+  /// The default instance of [NativeStorageUtilityPlatform] to use.
   ///
-  /// Defaults to [MethodChannelStorageUtility].
-  static StorageUtilityPlatform get instance => _instance;
+  /// Defaults to [NativeStorageUtilityFoundation], [NativeStorageUtilityLinux], [NativeStorageUtilityAndroid], [NativeStorageUtilityWindows].
+  static NativeStorageUtilityPlatform get instance => _instance;
 
   /// Platform-specific implementations should set this with their own
-  /// platform-specific class that extends [StorageUtilityPlatform] when
+  /// platform-specific class that extends [NativeStorageUtilityPlatform] when
   /// they register themselves.
-  static set instance(StorageUtilityPlatform instance) {
+  static set instance(NativeStorageUtilityPlatform instance) {
     PlatformInterface.verifyToken(instance, _token);
     _instance = instance;
   }
@@ -57,7 +62,11 @@ abstract class StorageUtilityPlatform extends PlatformInterface {
   /// The given parameter is the [path] to the directory on the respective platform
   ///
   /// This returns true if the path can be opened. Otherwise, it maybe null or false.
-  Future<bool?> openDirectory(String path) {
+  void openDirectory(String path) {
     throw UnimplementedError('openDirectory() has not been implemented.');
+  }
+
+  void openFile(String path) {
+    throw UnimplementedError('openFile() has not been implemented.');
   }
 }

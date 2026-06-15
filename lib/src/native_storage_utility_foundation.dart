@@ -3,11 +3,12 @@ import 'dart:io';
 import 'package:objective_c/objective_c.dart';
 
 import 'ffi/foundation_bindings.dart';
-import 'storage_utility_platform_interface.dart';
+import 'native_storage_utility_platform_interface.dart';
 
 /// The iOS and macOS implementation of [StorageUtilityPlatform].
-class StorageUtilityFoundation extends StorageUtilityPlatform {
+class NativeStorageUtilityFoundation extends NativeStorageUtilityPlatform {
   NSFileManager get _manager => NSFileManager.getDefaultManager();
+  NSWorkspace get _workspace => NSWorkspace.getSharedWorkspace();
 
   @override
   int getFreeBytes(String path) {
@@ -43,18 +44,31 @@ class StorageUtilityFoundation extends StorageUtilityPlatform {
   }
 
   @override
-  Future<bool?> openDirectory(String path) async {
+  Future<void> openDirectory(String path) async {
     if (Platform.isMacOS) {
-      final workspace = NSWorkspace.getSharedWorkspace();
-
       if (await FileSystemEntity.isDirectory(path)) {
-        workspace.openFile(NSString(path));
+        _workspace.openFile(NSString(path));
       } else {
         final url = NSURL.fileURLWithPath(NSString(path));
-        workspace.activateFileViewerSelectingURLs(.of([url]));
+        _workspace.activateFileViewerSelectingURLs(.of([url]));
       }
     }
+  }
 
-    return true;
+  @override
+  void openFile(String path) {
+    final nativePath = NSString(path);
+
+    if (!_manager.fileExistsAtPath(nativePath)) {
+      throw Exception('File does not exist: $path');
+    }
+
+    if (!_manager.isReadableFileAtPath(nativePath)) {
+      throw Exception('File is not readable: $path');
+    }
+
+    // final url = NSURL.fileURLWithPath(nativePath);
+
+    _workspace.openFile(nativePath);
   }
 }
