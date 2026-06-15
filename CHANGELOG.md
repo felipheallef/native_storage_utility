@@ -1,3 +1,5 @@
+## 0.0.2
+* Implement `openFile` on Windows.
 ## 0.0.1
 
-* TODO: Describe initial release.
+* Initial release with multiplatform support.
