@@ -62,7 +62,7 @@ class StorageUtilityWindows extends StorageUtilityPlatform {
   }
 
   @override
-  Future<bool?> openDirectory(String path) async {
+  Future<bool?> openFile(String path) async {
     final pathNamePtr = path.toNativeUtf16();
     final operationPtr = 'open'.toNativeUtf16();
 
@@ -83,4 +83,7 @@ class StorageUtilityWindows extends StorageUtilityPlatform {
 
     return true;
   }
+
+  @override
+  Future<bool?> openDirectory(String path) => openFile(path);
 }
