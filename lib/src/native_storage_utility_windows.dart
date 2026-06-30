@@ -10,7 +10,7 @@ import 'native_storage_utility_platform_interface.dart';
 class NativeStorageUtilityWindows extends NativeStorageUtilityPlatform {
   @override
   int getFreeBytes(String path) => using((arena) {
-    final pathNamePtr = path.toNativeUtf16(allocator: arena);
+    final pathNamePtr = arena.pcwstr(path);
     final lpFreeBytesAvailableToCaller = arena<ULONGLONG>();
     final lpTotalNumberOfFreeBytes = arena<ULONGLONG>();
 
@@ -33,7 +33,7 @@ class NativeStorageUtilityWindows extends NativeStorageUtilityPlatform {
 
   @override
   int getTotalBytes(String path) => using((arena) {
-    final pathNamePtr = path.toNativeUtf16(allocator: arena);
+    final pathNamePtr = arena.pcwstr(path);
     final lpTotalNumberOfBytes = arena<ULONGLONG>();
 
     final result = GetDiskFreeSpaceEx(
@@ -52,18 +52,12 @@ class NativeStorageUtilityWindows extends NativeStorageUtilityPlatform {
 
   @override
   Future<bool?> openFile(String path) async => using((arena) {
-    final pathNamePtr = path.toNativeUtf16(allocator: arena);
-    final operationPtr = 'open'.toNativeUtf16(allocator: arena);
+    final pathNamePtr = arena.pcwstr(path);
+    final operationPtr = arena.pcwstr('open');
 
     final hwnd = GetForegroundWindow();
-    ShellExecute(
-      hwnd,
-      operationPtr,
-      pathNamePtr,
-      nullptr,
-      nullptr,
-      SW_SHOWNORMAL,
-    );
+
+    ShellExecute(hwnd, operationPtr, pathNamePtr, null, null, SW_SHOWNORMAL);
 
     return true;
   });
